@@ -1,0 +1,61 @@
+##### Docker imp Commands ####
+
+$ docker image prune -a --filter "until=12h"
+$ docker inspect <imageid> -- it will give more details about our image
+$ docker rmi <imageid> -- to delete image
+$ docker images -q -- to list only image ids
+$ docker rmi $(docker images -q)   -- to remove all the images at a time
+$ docker rmi -f $(docker images -q) -- with forcefully
+$ docker rmi -f <imageid> -- with forcely
+$ docker images -f dangling=true
+$ docker tag <imageid> <registry/repository:version> -- if we want to tag any image with repo we can use this command
+$ docker history <imagedid>
+$ docker image prune -- to remove only dangling images(images doesn't have tags,not associated with any repo and not being used by any container
+$ docker image prune -f -- it will perform without asking anything
+$ docker image prune -a -- it will remove all images which are not associated with any running container(including dangling images)
+ 
+$ docker system prune -- it will perfom below tasks
+$ docker system prune -f  -- it will perform actions below wihtout asking a permission
+ 
+$ docker image prune -- it will delete all dangling images
+$ docker create --name <containername> <reponame:tag or imageid>     -- it will create docker containers and to run those created containers just use docker start command
+
+$ docker run -d --name <containername> -p port:port <reponame:tag or imageid>
+$ docker start <containerid>
+$ docker restart <containerid>
+$ docker ps 
+$ docker ps -a
+$ docker container ls
+$ docker kill <containername/id>
+$ docker rename <existedname> <newname>
+$ docker pause/unpause <containerid>
+$ docker run -d -m 512M --cpus 0.5 --name grafana -p 3000:3000 grafana/grafana-oss  -- to allocate resource limits 
+$ docker cp /path/filename  <containerid/name:/path/to/where>    -- to copy files from hostmachine to container
+$ docker cp <containerid/name:/path/from>  /to/where             -- to copy files from container to hostmachine
+$ docker rm -f $(docker ps -qa)   -- we can delete or remove the running and stopped containers as well forcely
+$ docker run -d  --name springapp -p 8080:8080 -e MONGO_DB_HOSTNAME=mongo -e MONGO_DB_USERNAME=devdb -e MONGO_DB_PASSWORD=devdb@123 --network springappnetwork   8555936327/spring-boot-mongo:v1  -- to run application by passing DB credentinas as arguments
+$ docker run -d --name mongo -e MONGO_INITDB_ROOT_USERNAME=devdb -e  MONGO_INITDB_ROOT_PASSWORD=devdb@123 --network springappnetwork mongo   --- to run the DB as a docker container
+$ docker network connect <networkname> <containerid or name>  -- to attach an existing network to a running container
+$ docker network disconnect <networkname> <containerid or name>  -- to detach a network from the running container
+$ docker create network springapp  -- to create network for communication b/n containers which are running on the same host
+$ docker create nework -d overlay springapp  -- to create network for communication b/n containers which are running on the different hosts or docker machines
+
+Docker troubleshoot commands:
+ 
+$ docker top <containerid>   -- to see the what is the running inside the container
+$ docker stats <containerid>  -- it will show how much memory/cpu is utilising by container
+$ docker logs <container id>   -- it will show stdout and stderror of app what has written 
+$ docker logs -f <containerid>  --- it will show floating logs
+$ docker logs <id> --tail 10
+$ docker logs <id>  > file.txt -- to debug
+$ docker attach <containerid> -- it will attach the contaner process to the host terminal so that we can see whatever is happening inside the container
+ 
+## docker-compose commands ##
+docker-compose up --build -d  -- to build image and up apps in detached mode
+docker-compose config  -- we can use this for validating the attributes of compose file
+docker-compose create
+docker-compose up -d
+docker-compose down
+docker-compose stop/start
+docker-compose restart
+docker-compose ps

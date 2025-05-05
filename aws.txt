@@ -1,0 +1,283 @@
+#### AWS CLI COMMANDS ###
+
+Q1. create iam user named as awscliuser and role for iam user and attach the administrator access policy to it using cli,
+    a. generate an access key for a iam user and configure it
+    b. generate an iam role named ec2-s3 access with policy that allows ec2
+
+Commands:
+
+    $ aws iam create-user --user-name awscliuser
+    $ aws iam attach-user-policy --user-name awscliuser --policy-arn arn:aws:iam::aws:policy/AdministratorAccess
+    $ aws iam create-access-key --user-name awscliuser
+    $ aws iam create-role --role-name ec2-s3-access --assume-role-policy-document file://trust-policy.json
+    $ aws iam create-policy --policy-name S3AccessPolicy1 --policy-document file://s3-access-policy.json
+    $ aws iam attach-role-policy --role-name ec2-s3-access --policy-arn arn:aws:iam::664418994073:policy/S3AccessPolicy1
+
+
+Q2. s3 bucket management
+   	a. create an s3 bucket named as mybuckt9843
+  	b. enable the versioning and server side encryption for the bucket
+   	c. upload sample file test.txt to s3 bucket
+   	d. make the uploaded file publicly accessible using an acl
+  	e. list all objects in the bucket and delete the uploaded files from the bucket.
+
+Commands:
+
+    $ aws s3api create-bucket --bucket mybuckt9843 --region us-west-2 --create-bucket-configuration LocationConstraint=us-west-2
+    $ aws s3api put-bucket-versioning --bucket mybuckt9843 --versioning-configuration Status=Enabled
+    $ aws s3api put-bucket-encryption --bucket mybuckt9843 --server-side-encryption-configuration '{
+        "Rules": [{
+             "ApplyServerSideEncryptionByDefault": {
+                 "SSEAlgorithm": "AES256"
+                }
+          }]
+      }'
+
+    $ aws s3api cp text.txt s3://mybuckt9843/
+    $ aws s3api put-object-acl --bucket mybuckt9843 --key text.txt --acl public-read
+    $ aws s3api put-public-access-block --bucket mybuckt9843 --public-access-block-configuration BlockPublicAcls=false
+    $ aws s3api ls s3://mybuckt9843/
+    $ aws s3api delete-object --bucket mybuckt9843 --key test.txt
+
+
+Q3. create a vpc and its components using aws cli
+      a. create an ec2 instance using custome vpc
+
+Commands:
+
+    $ aws ec2 create-vpc --cidr-block 10.0.0.0/16 --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=MyVPC}]'
+    $ aws ec2 create-subnet \
+      --vpc-id vpc-08158bb03b52e2511 \
+      --cidr-block 10.0.1.0/24 \
+      --tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=my-ipv4-only-subnet}]'
+    $ aws ec2 create-internet-gateway \
+      --tag-specifications ResourceType=internet-gateway,Tags=[{Key=Name,Value=my-igw}]
+    $ aws ec2 attach-internet-gateway \
+      --internet-gateway-id igw-08244497a7f086709 \
+      --vpc-id vpc-08158bb03b52e2511
+    $ aws ec2 create-route-table --vpc-id vpc-08158bb03b52e2511
+    $ aws ec2 create-route --route-table-id rtb-0cb8a5c0d333c8eab --destination-cidr-block 0.0.0.0/0 --gateway-id igw-08244497a7f086709
+    $ aws ec2 associate-route-table --route-table-id rtb-0cb8a5c0d333c8eab --subnet-id subnet-0e77f4c2a541ce1e5
+    $ aws ec2 create-security-group --group-name MySecurityGroup --description "My security group for ec2" --vpc-id vpc-08158bb03b52e2511
+    $ aws ec2 authorize-security-group-ingress \
+      --group-id sg-04c805134aef3b2ad \
+      --protocol tcp \
+      --port 22 \
+      --cidr 0.0.0.0/0
+    $ aws ec2 run-instances --image-id ami-087f352c165340ea1 \
+      --count 1 --instance-type t2.micro \
+      --security-group-ids sg-04c805134aef3b2ad --subnet-id subnet-0e77f4c2a541ce1e5
+
+
+
+
+
+
+===================================================================
+Q4.	Create EKS cluster using AWS CLI 
+
+##Commands for Eks cluster creation ##
+
+#step1:- Create a custom vpc and its components
+
+$ aws ec2 create-vpc --cidr-block 10.0.0.0/16 --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=demo-vpc}]'
+$ aws ec2 create-subnet --vpc-id vpc-024daf4bebf645672 --cidr-block 10.0.1.0/24 --availability-zone us-east-1a --tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=my-subnet-1}]'
+$ aws ec2 create-subnet --vpc-id vpc-024daf4bebf645672 --cidr-block 10.0.2.0/24 --availability-zone us-east-1b --tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=my-subnet-2}]'
+$ aws ec2 create-internet-gateway --tag-specifications 'ResourceType=internet-gateway,Tags=[{Key=Name,Value=demo-igw}]'
+$ aws ec2 attach-internet-gateway --vpc-id vpc-024daf4bebf645672 --internet-gateway-id igw-095996155e3636af3
+$ aws ec2 create-route-table --vpc-id vpc-024daf4bebf645672 --tag-specifications 'ResourceType=route-table,Tags=[{Key=Name,Value=my-route-table}]'
+$ aws ec2 create-route --route-table-id rtb-0e8c10de469f03a6b --destination-cidr-block 0.0.0.0/0 --gateway-id igw-095996155e3636af3
+$ aws ec2 associate-route-table --subnet-id subnet-05101950896759cd9 --route-table-id rtb-0e8c10de469f03a6b
+$ aws ec2 associate-route-table --subnet-id subnet-0436059896d6349ef --route-table-id rtb-0e8c10de469f03a6b
+
+Outputs:
+vpcid: "vpc-024daf4bebf645672"
+subnetid1:"subnet-05101950896759cd9",
+subnetid2: ""subnet-0436059896d6349ef"
+InternetGatewayId: "igw-095996155e3636af3"
+RouteTableId: "rtb-0e8c10de469f03a6b"
+
+
+#step2:- create security group
+
+$ aws ec2 create-security-group --group-name my-sg --description "My security group" --vpc-id vpc-024daf4bebf645672
+$ aws ec2 authorize-security-group-ingress --group-id sg-0afad46b52a2008e5 --protocol tcp --port 22 --cidr 0.0.0.0/0
+$ aws ec2 authorize-security-group-ingress --group-id sg-0afad46b52a2008e5 --protocol tcp --port 443 --cidr 0.0.0.0/0
+$ aws ec2 authorize-security-group-egress --group-id  sg-0afad46b52a2008e5 --protocol tcp --port 0-65535 --cidr 0.0.0.0/0
+
+
+Outputs:
+GroupId: "sg-0afad46b52a2008e5"
+
+
+#step2:- Create IAM role and attach polices:
+
+$ vim eks-cluster-role-trust-policy.json
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "eks.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+
+$ aws iam create-role --role-name eksClusterRole --assume-role-policy-document file://eks-cluster-role-trust-policy.json
+$ aws iam attach-role-policy --role-name eksClusterRole --policy-arn arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+$ aws iam attach-role-policy --role-name eksClusterRole --policy-arn arn:aws:iam::aws:policy/AmazonEKSServicePolicy
+ 
+
+# step3:- create the eks cluster
+
+$ aws eks create-cluster --name my-demo-cluster --role-arn arn:aws:iam::877786395093:role/eksClusterRole --resources-vpc-config subnetIds=subnet-05101950896759cd9,subnet-0436059896d6349ef,securityGroupIds=sg-0afad46b52a2008e5
+
+# step4: create iam role for node group
+
+$ vim vim node-trust-policy.json
+
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+
+$ aws iam create-role --role-name eksNodeRole --assume-role-policy-document file://node-trust-policy.json
+$ aws iam attach-role-policy --role-name eksNodeRole --policy-arn arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+$ aws iam attach-role-policy --role-name eksNodeRole --policy-arn arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+$ aws iam attach-role-policy --role-name eksNodeRole --policy-arn arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+
+# step5:- create the nodegroup
+
+$ aws eks create-nodegroup \
+    --cluster-name my-demo-cluster \
+    --nodegroup-name my-node-group \
+    --node-role arn:aws:iam::877786395093:role/eksNodeRole \
+    --subnets subnet-05101950896759cd9 subnet-0436059896d6349ef \
+    --scaling-config minSize=1,maxSize=3,desiredSize=2 \
+    --instance-types t3.medium
+
+
+$ aws eks describe-nodegroup --cluster-name my-demo-cluster --nodegroup-name my-node-group
+
+# Step6:- Enable Auto-Assign Public IP Address
+
+$ aws ec2 modify-subnet-attribute --subnet-id subnet-05101950896759cd9 --map-public-ip-on-launch
+$ aws ec2 modify-subnet-attribute --subnet-id subnet-0436059896d6349ef --map-public-ip-on-launch
+
+
+
+
+# step7:- install kubectl and describe cluster
+
+$ aws eks describe-cluster --name my-demo-cluster
+$ curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+$ chmod +x kubectl
+$ sudo mv kubectl /usr/local/bin/kubectl
+
+$ kubectl version --client
+$ aws eks update-kubeconfig --name my-demo-cluster --region us-east-1
+  outpu: Added new context arn:aws:eks:us-east-1:877786395093:cluster/my-demo-cluster to /home/ubuntu/.kube/config
+$ kubectl get pods -A
+$ kubectl get nodes
+
+
+
+
+
+### AWS ECR repo creation ###
+
+# aws ecr create-repository --repository-name my-app-repo --region us-east-1
+
+output:
+{
+    "repository": {
+        "repositoryArn": "arn:aws:ecr:us-east-1:877786395093:repository/my-app-repo",
+        "registryId": "877786395093",
+        "repositoryName": "my-app-repo",
+        "repositoryUri": "877786395093.dkr.ecr.us-east-1.amazonaws.com/my-app-repo",
+        "createdAt": "2025-04-07T08:44:01.214000+00:00",
+        "imageTagMutability": "MUTABLE",
+        "imageScanningConfiguration": {
+            "scanOnPush": false
+        },
+        "encryptionConfiguration": {
+            "encryptionType": "AES256"
+        }
+    }
+}
+
+## build dockr image##
+
+$ aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 877786395093.dkr.ecr.us-east-1.amazonaws.com
+$ docker build -t my-app-repo .
+$ docker tag my-app-repo:latest 877786395093.dkr.ecr.us-east-1.amazonaws.com/my-app-repo:latest
+$ docker push 877786395093.dkr.ecr.us-east-1.amazonaws.com/my-app-repo:latest
+
+
+## setup deployment and services files ###
+$ kubectl apply -f flaskapp-deployemnt -f flaskapp-service.yaml
+
+## deploy ingress controller and implement ingress resource##
+$ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml  -- install ingress controller
+$ kubectl apply -f nginx-ingress.yaml
+$ kubectl get ing -n ingress-nginx
+$ kubectl get pods -A
+
+$ dig alb-dnsname  -- output gives the resolved ips of alb dns
+$ sudo vim /etc/hosts
+  
+  3.83.58.139 myapp.co.in
+  54.81.202.172 myapp.co.in
+$ curl http://myapp.co.in/books
+$ curl http://myapp.co.in/swagger-config
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

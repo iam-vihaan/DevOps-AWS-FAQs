@@ -1,0 +1,61 @@
+	## terraform basic commands ##
+
+## Initializing terraform commands ##
+
+terraform init     			 		-- intitialise the working directory for cofiguration files and downloads the required plugins which we specified and configures the backend state 
+terraform init -upgrade 				-- it will upgrade the provider plugins to the latest acceptable version.
+terraform get 				 		-- downloads and updates the modules from its sources.
+
+## Making infra changes ##
+
+terraform plan 				 		-- shows the execution plan that it is going to create desired state of infra
+terraform plan -out=<filename> 	 		-- it will save the execution plan to a output file.
+terraform plan -target <resource name> 		-- it will shows the plan of a specific resource.
+terraform plan -replace <resource> 			-- to force a plan to replace a specific resource.
+terraform plan -var '<key>=<value>' 		-- set a value for one of the input variable.
+terraform plan -refresh-only 				-- inspect resource drift without updating the state file.
+terraform apply 						-- to create desired infra or to update it.
+terraform apply <file> 					-- to create or infra using a planned file.
+terraform apply -target <resource> 			-- to create or update a specific.
+terraform apply -replace <resource> 		-- force the replacement of a specific resource.
+terraform apply -auto-approve 			-- skip interactive approval for plan before apply.
+terraform apply -var-file="variables.tfvars"    -- to create infra using specific var.tfvars file.
+
+
+## Inspecting output values ##
+
+terraform output 						-- to show all output values.
+terraform output -json 					-- to show all
+terraform output -raw <name>  			-- to show a sepcific output value without quotes.
+
+## Managing state ##
+
+terraform refresh                         	-- update the statefile to match the existed infra.
+terraform show                            	-- to show the current state of the existed infra.
+terraform show <file>                     	-- to show a saved plan
+terraform show -json <file>               	-- to show the plan in json format
+terraform state list                      	-- list all resources in the state file.
+terraform state rm <resource>             	-- to remove a resource from the state file.
+terraform state mv <source> <dest>        	-- to rename a resource in the state file.
+terraform state replace-provider <from> <to>  	-- to replace provider for the resources in the state.
+terraform import <resource> <remote_id>       	-- import existing infra into terraform 
+terraform state pull                          	-- pull current state and output to stdout.
+
+## Tainting resources ##
+
+terraform taint <resource>                    	-- Mark a resource to be replaced.
+terraform untaint <resource>                  	-- mark a resource as no longer as tainted.
+
+## Destroying infra ##
+
+terraform destroy                             	-- destroy infra managed by terraform.
+terraform destroy -target <resource>          	-- destroy a specific resource.
+
+## Formatting and validation ##
+
+terraform validate                            	-- to check the configuration files or valide or not.
+terraform fmt                                 	-- to reformat your configuration in the standard style
+terraform fmt -check                          	-- check whether the configuration is formatted correctly, return non-zero exit code if it is not done.
+
+
+

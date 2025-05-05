@@ -1,0 +1,69 @@
+##### k8s ########
+ 
+ 
+#### commands ###
+ 
+$ kubectl get deployments
+$ kubectl rollout history deployment <deploymentname>
+$ kubectl rollout status deployment <name>
+$ kubectl rollout history deployment <deploymentname> --revision 1  -- we can see podtemplate and images that what are we used
+$ kubectl delete deployment <name>
+$ kubectl scale deployment <name> --replicas <number>
+ 
+##  kubernetes Important commands ##
+$ kubectl get all 
+$ kubectl get ns
+$ kubectl get pods -n <namespacename> 
+$ kubectl create namespace <name>
+$ kubectl get pods --show-labels
+$ kubectl get svc -o wide
+$ kubectl exec <podname> -- pwd or ls     -- to see execute commands in the pod without entering inside pod
+$ kubectl exec <podname> -c <containername> -- ls -ltrh    -- if you have multiple containers inside pod
+$ kubectl logs <podname>
+$ kubectl exec -it <podname> /bin/bash or /bin/sh
+$ kubectl get ds && kubectl get rs && kubectl get rc    -- daemonsets, replicaets and replicationController
+$ kubectl delete all --all
+$ kubectl config set-context --current --namespace=<namespace>     -- it will make the default namesapce as namespace what we will give, if we run kubectl get pods by default it will fetch pods from those namespace related if we want to change need to change use same command and change it to different namespace.
+$ kubectl get pv & kubectl get pvc & kubectl get storageclass
+$ kubectl get pods -o yaml  -- to see the pod info in a yaml format
+$ kubectl taint nodes <Node-name> node=HatesPods:Noschedule
+$ kubectl get nodes <node-name> -o jsonpath='{.spec.taints}' | sort
+$ kubectl create -f nginx-deployment.yaml -n dev
+$ kubectl port-forward --address 0.0.0.0  service/nginx-service 32073:80 &
+$ minikube addons list
+$ kubectl api-resources
+$ kubectl explain api
+$ kubectl config veiw
+$ kubectl create deployment nginx-deploy --image=nginx:latest --replicas=3 --port 8080  --dry-run=client -o yaml
+$ kubectl port-forward --address 0.0.0.0  service/nginx-service 32073:80 &
+$ steps for minikube
+$ sudo apt-get update
+$ curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+$ sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+$ minikube start
+$ minikube status
+$ minikube kubectl get -- po -A
+$ kubectl get po -A
+$ alias kubectl='minikube get --"
+$ kubectl expose deployment web --type=NodePort --port=8080
+
+ 
+# steps for minikube
+ 
+1. sudo apt-get update
+ 
+2. curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+   sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+ 
+3. minikube start
+ 
+4. minikube status
+ 
+5. minikube kubectl get -- po -A
+ 
+6. kubectl get po -A
+ 
+7. alias kubectl='minikube get --"
+8. kubectl api-resources
+9. kubectl explain api
+10.kubectl config veiw
