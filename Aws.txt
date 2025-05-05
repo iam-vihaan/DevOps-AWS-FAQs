@@ -1,0 +1,583 @@
+
+
+26 Regions -- and 85 Available zones
+
+2006 --North Virginia -- first implemented region
+
+In India -- Mumbai  
+
+AZ --set of isolated data centers are called availability zones && Distance between each AZ is 100KM
+
+Region -- Group of Available zones(clustered data centers)
+
+NACL (Network access control list, which provides security at subnet level, there is a deny option)
+
+SG provides security at resource level (Ec2 instance level) there is no deny
+
+Sg is statefull and NACL is Stateless
+
+Typical infra:- IGW --> Routetable --> Publicsubnet(intrnet connection) (webservers) --> private subnet (applicatin servers) --> private subnet (DB)
+
+
+IPv4 :- Internet Protocol version 4 which contains 4 octects
+
+
+Cloud Computing: Somewhere something is running is nothing but cloud computing ( AWS is one of cloud computing services)
+VPC:-
+     * we can create VPC with CIDR block range between 10.0.0.0/16 to 10.0.0.0/28 only
+     * CIDR - Clasless inter-domain routing
+     * CIDR has two components the base ip -- 10.0.0.0 and Subnet mask -- 16
+     * Base ip defines the IP address contained in the range
+     * Subnet mask defines how many bits can change in the IP
+     * 10.0.0.0/32  - 2^32-32 = 2^0 = 1 -- will have only one IP address i.e 10.0.0.0 -- which is not allowed to create bcoz aws will reserve 5 ip address
+     * 10.0.0.0/31  - 2^32-31 = 2^1 = 2 -- will have only two IP address i.e 10.0.0.0 and 10.0.0.0.1 which is not allowed
+     * 10.0.0.0/24  - 2^32-24 = 2^8 = 256 -- will have 10.0.0.0 to 10.0.0.255
+     * 10.0.0.0/20  - 2^32-16 = 2^16 = 65536 
+     * CIDR block size should be inbetween 16 to 28 only we can't create other than this, if we try also it won't allow us.
+     
+If we give subnet cidr range like as below under same vpc the ip address will be as follow
+
+VPC CIDR: 10.0.0.0/16
+subnet CIDR: 10.0.0.0/24  -- range 10.0.0.255/24
+subnet CIDR: 10.0.1.0/24  -- range 10.0.1.1 -- 255
+subnet CIDR: 10.0.2.0/24  -- range 10.0.2.1 -- 255
+subnet CIDR: 10.0.3.0/24  -- range 10.0.3.1 -- 255
+ 
+One vpc will contain only one IGW     
+Subnet:-
+     * subnet is a range of ip address in a VPC
+     * after creating VPC need to create subnet,for creating subnet we should't use same CIDR block as we used to create VPC   		  because it will create subnet but it won't allow us to create another subnet.
+    
+  ERRO while creating subnet:-
+    
+     * If we try to create subnet with same cIDR block as with previous subnet it won't allow us to create.
+       
+     * If we try to create subnet with 10.0.0.1/24 , 10.0.0.255/24  it won't allow to create becuase those already existed (those are part of first created subnet) so we can't create if we try to create it will throw error as "CIDR Address overlaps with existing Subnet CIDR: 10.0.0.0/24."...
+     
+     * But we can create another subnet with the range as "10.0.1.0/24"...So and So
+     
+Internet gateway:-
+
+     * we have to create internet gateway for the VPC to communicate with internet.
+     
+     * we can create only one internet gateway for one VPC (we can attach one internet gateway for one VPC).
+     
+Route table:
+
+     * Route table is nothing but a set of rules which contains destination ip,netmask etc. It determines the traffic routing to destination ip addresses  which is coming from internet gateway.
+     
+     * when the requests comes to internetgateway then it should go to the rout table to decide where it has to go
+     
+     * After creating the route table we have to edit routes and add route, then need to give destination as "0.0.0.0/0" and target as our "route talbe name" whatever we have created.
+     
+     * when request comes to route table from the internetgateway then has to go to public or private subnet, but private does't have internet connection becuase its private so we have to route it to public subnet. So we have to go to route table and there is subnetassociation option we have to edit it and needs to add public subnet whatever we have created previously
+    
+     
+     
+## EBS Volumes:
+
+whenever we launch an ec2 instance we will get root volume by default,but when we need an extra volume then we should go for EBS volumes.
+
+If we want to attach any EBS volume to the ec2 instance both should be in the same Availability zone, becoz EBS is zone based service
+
+* First create an ec2 instance then login to that particluar instance and run command called "lsblk" which will show the list volumes attached to that instance.
+qJD'b0O#
+ubuntu@ip-172-31-42-77:~$ lsblk
+NAME     MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+loop0      7:0    0 25.2M  1 loop /snap/amazon-ssm-agent/7993
+loop1      7:1    0 55.7M  1 loop /snap/core18/2829
+loop2      7:2    0 63.9M  1 loop /snap/core20/2318
+loop3      7:3    0   87M  1 loop /snap/lxd/28373
+loop4      7:4    0 38.8M  1 loop /snap/snapd/21759
+xvda     202:0    0    8G  0 disk 
+├─xvda1  202:1    0  7.9G  0 part /
+├─xvda14 202:14   0    4M  0 part 
+└─xvda15 202:15   0  106M  0 part /boot/efi
+
+* then create EBS volume with 100GB in the same Availability zone where the ec2 insance deployed. After that attach to the ec2 instance then again run lsblk we can see ebs volumes
+
+ubuntu@ip-172-31-42-77:~$ lsblk
+NAME     MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+loop0      7:0    0 25.2M  1 loop /snap/amazon-ssm-agent/7993
+loop1      7:1    0 55.7M  1 loop /snap/core18/2829
+loop2      7:2    0 63.9M  1 loop /snap/core20/2318
+loop3      7:3    0   87M  1 loop /snap/lxd/28373
+loop4      7:4    0 38.8M  1 loop /snap/snapd/21759
+xvda     202:0    0    8G  0 disk 
+├─xvda1  202:1    0  7.9G  0 part /
+├─xvda14 202:14   0    4M  0 part 
+└─xvda15 202:15   0  106M  0 part /boot/efi
+xvdk     202:160  0   20G  0 disk 
+ubuntu@ip-172-31-42-77:~$ 
+
+* search for partitions of the ebs disk use command -- sudo fdisk -l
+
+Disk /dev/xvdk: 20 GiB, 21474836480 bytes, 41943040 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+* means the disk has not been partitioned
+
+* sudo file -s /dev/xvdk -- means there is no filesystem for the data volume. we have to create.
+/dev/xvdk: data
+ubuntu@ip-172-31-42-77:~$ 
+
+* create file system using command -- " sudo mkfs -t xfs /dev/xvdk "  -- here /dev/xvdk is nothing but volume which we want to create file system for
+
+Output:
+
+ubuntu@ip-172-31-42-77:~$ sudo mkfs -t xfs /dev/xvdk
+meta-data=/dev/xvdk              isize=512    agcount=4, agsize=1310720 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1    bigtime=0 inobtcount=0
+data     =                       bsize=4096   blocks=5242880, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+* Run the command to check whether file system created or not -- sudo file -s /dev/xvdk
+
+output:
+
+ubuntu@ip-172-31-42-77:~$ sudo file -s /dev/xvdk
+/dev/xvdk: SGI XFS filesystem data (blksz 4096, inosz 512, v2 dirs)
+
+* previously output was only data which means there was no filesystem created now output is different so filesystem has been created
+* we have volume with filesystem created then we need to use that volume for that create a directory and mount the volumes 
+* Run cmd " sudo mkdir /myebsvol " && "sudo mount /dev/xvdk /myebsvol"  -- we have mounted 
+* Use couple of commands to check whether volume is mounted or not -- df -kh && ls -lart /myebsvol
+
+Output:
+
+ubuntu@ip-172-31-42-77:~$ df -kh
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root       7.6G  1.6G  6.0G  22% /
+tmpfs           475M     0  475M   0% /dev/shm
+tmpfs           190M  852K  190M   1% /run
+tmpfs           5.0M     0  5.0M   0% /run/lock
+/dev/xvda15     105M  6.1M   99M   6% /boot/efi
+tmpfs            95M  4.0K   95M   1% /run/user/1000
+/dev/xvdk        20G  175M   20G   1% /myebsvol
+
+ubuntu@ip-172-31-42-77:~$ ls -lart /myebsvol/
+total 4
+drwxr-xr-x  2 root root    6 Jul 18 07:12 .
+drwxr-xr-x 20 root root 4096 Jul 18 07:19 ..
+
+* if we want to increase EBS volumes we can modify but we cannot decrease
+* lets say i have some files in my /myebsvol directory i want these data to be attached to another ec2 instance in that case i can create a snapshot
+* create a snapshot from the ebsvolumes and create a separate ebs volume outof it and attach that ebs volume to the new ec2 instance
+* login to the ec2 instance there the filesystem already will be there for the volume we just need to create a directory and mount the directory in the mountpoint the data of /myebsvol of previous instance will be restored
+
+
+
+
+ 
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+                                         ###############  AWS Notes by Zero to hero ###############
+                                         
+ * What is cloud?
+ * Public vs Private cloud
+ * Why public is soo popular
+ * Why aws
+ * IAM -- to access any aws services it gives authentication and authorization
+ * DevOps engineer has to provide access to aws resoureces by creating users 
+ * Users
+ * groups
+ * Ploicies -- permissions aws writes the policies by default in a json format
+ * Roles  -- Roles are similar to the users but not for the users but for the aws services to interact with other aws services.  In aws..to access any aws service by customers we will create roles and roles are for temporarely purpose only
+ 
+ * Inside data center there can be multiple physical servers under physical servers they will create virtual machines
+ * VPC components
+   a.Internet gateway
+   b.Public subnet
+   c.Load balancer
+   d.Route table
+   e.Security groups -- Virtual firewalls at Ec2 instance levels which controls the inbound and outbound traffic
+   f.NACL  -- its a stateless firewall Provides the additional layer of the network security at the IP addresses level
+   G.Private subnets
+   h. NAT gateway -- helps to download anything required for server or application from the internet and masks the IP address our server or app and protects.
+                           
+ 
+ 
+ AWS RDS:
+ 
+ github link to install mariadb: https://github.com/yeshwanthlm/YouTube/blob/main/aws-rds-masterclass.md
+ AWS s3 Bucket:-
+ 
+ * its a simple storage service, cheaper in const we can store as much as we can like TBs with less cost
+ 
+ ### User data script ###
+ 
+ The below script is helpfull to install the apache2 and docker using userdata once ec2 is launched we can check for success and errors using command -- tail 3000 /var/log/cloud-init-output.log
+ 
+ #!/bin/bash
+
+#####################################
+###### Step-1: Install Apache2 ######
+#####################################
+
+yes | sudo apt update
+yes | sudo apt install apache2
+
+####################################
+###### Step-2: Install Docker ######
+
+# Add Docker's official GPG key:
+
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+
+# Install the latest Version:
+
+yes | sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+
+
+
+Topics which i should cover in aws 
+ 
+
+Understanding AWS Global Infrastructure
+AWS Management Console and CLI
+Compute Services
+
+EC2
+Lambda
+ECS (Elastic Container Service) and EKS (Elastic Kubernetes Service)
+Storage Services
+
+S3 (Simple Storage Service)
+EBS (Elastic Block Store)
+EFS (Elastic File System)
+Networking and Content Delivery
+
+VPC (Virtual Private Cloud)
+Route 53
+CloudFront
+Database Services
+
+RDS (Relational Database Service)
+DynamoDB
+Aurora
+Security, Identity, and Compliance
+
+IAM (Identity and Access Management)
+AWS Key Management Service (KMS)
+AWS Shield and WAF (Web Application Firewall)
+Deployment and Management
+
+AWS CodePipeline, CodeBuild, CodeDeploy, CodeCommit
+AWS Elastic Beanstalk
+AWS Systems Manager
+Monitoring and Logging
+
+AWS CloudWatch
+AWS CloudTrail
+AWS X-Ray
+aws creds
+
+pass: haribhanu@2000
+
+## AWS Concepts: ##
+# EC2#
+types  of Ec2 instacne:
+1.General purpose -- the instances which are used for balanced computing,memory and networking purpose. t,m families comes under general purpose, suitable for web servers and appservers,dev and uat envs
+
+2. compute optimized -- used for high performance compute tasks such as machine learning interface, Batch processing and high performance web servers. C types families comes under compute optimized
+
+3. Memory optimized - used for memory intensive tasks such as Databases, high performance caching and Real time analytics r,x and z comes under this
+
+4. Storage optimized -- used for workloads with high storage IOPS needs such as data wearhousing, big data processing "i" family comes under this
+
+5. Accelrtaing computing -- useful for the tasks which requries GPU  like as machine learning video rendering G family 
+
+
+difference between T seires and m sireis in generapurpose tyep:
+* t series is mainly for burstable cpu performance( burstable is nothing but using more cpu then its limits or baseline for shorter periods) which is suitable for variable workloads and matainance of cost is low
+* M series is for consistent and preditctable performance suitable for wherever the performance requires steadyness and its slight high cost maintance
+
+* C series is mainly for cpu intensive tasks such onine gaming, batch processing and high performance web servers
+
+
+
+
+IAM
+
+EBS: types general purpose voluems -- gp2,gp3( better than gp2), iops intensive volumes -- io1,io2
+after creating and attaching voumes to the ec2 instance run follow steps
+lsblk -- it will list the volumes and partitions
+sudo fdisk -l  -- it will list the partions and devices take eds volume path like /dev/xvdk
+sudo file -s /dev/xvdk -- it will check and let us whether the volume is having file system or not if no create-- if it gives result as dev/xvdk: data means no file system created
+sudo mkfs -t xfs /dev/sdk
+check file system again
+sudo mkdir -p /myebsvolume -- create a mount directory 
+sudo mount /dev/sdk /myebsvolume  -- mount the volume with mount directory
+we can create snapshots from a volumes and we can create new volulmes out of snaps and we can attach to other instances as well ( before creation of snaps we have to stop instances)
+we can copy the snapshots from one region to other regions go to actions select copy option then select the region and we can make snapshot available public
+
+# S3 bucket #
+
+* amazon s3 is a simple storage service which is used for objects storing
+* it can store files, backups, media,logs strutctured and unstructed data and used to host a static website to serve HTML,css and javascript files
+* we can store unlimited data and there is no restriction each object we can store till 5TB
+* we can go to s3 section select name of s3 then click on that then browse for store,select remove,delete and upload data and we can access through http protocol
+  like through URL
+* we can implet security for the s3 buckets through iam policies and access control lists and it supports server side and client side encryption as well
+   a. encrypt data at rest using server-side encryption options provided by s3
+   b. encrpts data in transist by using ssl/tls for data transferes (transport layer security /secure socket layer)
+   c. it will provide access logging to capture detailed records of requests made to your s3 bucket and we can monitor access logs and configure alerts to detect any suspicious activities or unauthoried access attempts
+* we can enable versioing of s3 buckets which is a additional layer of protection of data incase of accidental deletion or rewriting of data
+  a. lets say i have uploaded one object and tomorrow i again uploaded same updated file then the existed file data will be overriden if we don't enable bucket versioning
+  b.sudo apt  install awscli
+* name of s3 buckets should be unique across all aws accounts
+* we can create s3 buckets in region wise but the content can be accesible across all regions
+* object is nothing but anything that we store like any file or folder which is one object...each object size should be max 5TB but we can store number of unlimited objects
+* s3 storage is highly reliable and availabe because it copies all the sotrage object into multiple azs in a region so there 99.9999999999 percent reliable 
+* cost will depends on the type of storage class like if we want to be write our data and read data very quickly then that is very cost effective
+* lets i want cost effictive and if retrival speed is very low also fine then i can go with s3 glacier deep archive class which is very cheaper
+* if i want to access the data frequently then s3 standard is good one
+* whenever i delete file s3 will create a delete marker for us to recover a file then we need to delete that marker then the previous version that file will be shown us
+
+
+s3 storage classes:
+S3 offers several storage classes with different pricing based on data access frequency and latency requirements:
+
+S3 Standard: For frequently accessed data.
+S3 Intelligent-Tiering: Automatically moves objects to the most cost-effective storage class based on access patterns.
+S3 Standard-IA (Infrequent Access): For less frequently accessed data with rapid access when needed.
+S3 Glacier and Glacier Deep Archive: For long-term, archival storage with low access frequency.
+
+bucket creation process:
+aws managemet console go to s3 buckets ->create bucket->select bucket type a. general purpose or Directory type general purpose is for storing objects across all availability zones b. dirctory type will store objects across a single availability zone for faster retrival -->enter bucketname which should be unique -> then object ownership acls disabled means bucket creator is the owner of the object who can have full access to controll access --> block all public access need to tick on checkpoint --> bucket versioning enable it --> tags we can create  -->  encryption by default server side encryption will be there --> as a advanced option we can lock objects(nothing but as long as objects will store no one can see them)
+
+tomo:
+DynamoDb
+Route53
+ECS
+ECR
+EKS
+CDN
+WAF
+RDS
+
+
+
+
+ 
+ ### How to create aws eks ###
+ 
+1. Have aws iam account and have necessary policies to create eks cluster (AmazonEKS cluster policy, AmazonEKS service policy, AmazonEKSWorkerNode policy, AmazonEKS_CNI_Policy)
+2. install aws cli on the terminal from which you want to create cluster and configure it with aws credentials like secretKey and accesskey and region
+3. Install eksctl cli tool
+4.  eksctl create cluster \
+> --name test-cluster \
+> --version 1.29 \
+> --region us-east-1 \
+> --nodegroup-name linux-nodes \
+> --node-type t2.micro \
+> --nodes 2
+
+5. aws eks --region us-east-1 update-kubeconfig --name test-cluster
+
+
+
+6.aws eks describe-cluster --name <ekscluster-name> --region <region-name>  --> to check the cluster-status
+7.install aws CLI
+  a. aws configure --pass details
+8.install kubectl
+9.Setup nodegroup
+ a.go to eks-cluster and go to compute resource
+ b.create nodegroup
+ c.select iam service roles as ekscni,ec2containerread,workernode policy 
+
+
+
+#### Important questions ###
+
+what is pub and private subnets?
+What is the diff b/n pub subnet and private sub?
+Diff b/n SG and NACL?
+what is tenancy in aws?
+Unfortunately i have created the EBS volume without adding Encryption?
+what is the block in EBS?
+what is the bottleneck in disk?
+1) What is EFS ?
+2) how to configure S3 with SDN?
+3) s3 lifecycle policy
+4) static website hosting using s3
+5) Describe your project architecture ?
+6) What is private subnet and public subnet?
+7) what is NAT gateway ? other way , No one can access the database server from internet but from database server we can download the patch?
+8) can we mount s3 on ec2 instance?
+9) can we make s3 bootable?
+10) what are routing policy in rout53?
+12) how to take snapshots of a rds database in every 3 hours?
+13) how to get the public ips of all ec2 instance under a single user acount ?
+14) user's are complainig they are not able to access the server ,what is approach to fix this ?
+15) difference between security group and NACL?
+16) how to create FQDN?how to setup sub domains?
+
+my aws account iam creds:
+techops.buddy@gmail.com
+aws credentianls
+
+AWS_ACCESS_KEY_ID: AKIA4YYBFOHKRBF53SKC
+AWS_SECRET_ACCESS_KEY: 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
+
+
+
+
+
+
+
+#### AWS CLI COMMANDS ###
+
+Q1. create iam user named as awscliuser and role for iam user and attach the administrator access policy to it using cli,
+    a. generate an access key for a iam user and configure it
+    b. generate an iam role named ec2-s3 access with policy that allows ec2
+
+Commands:
+
+    $ aws iam create-user --user-name awscliuser
+    $ aws iam attach-user-policy --user-name awscliuser --policy-arn arn:aws:iam::aws:policy/AdministratorAccess
+    $ aws iam create-access-key --user-name awscliuser
+    $ aws iam create-role --role-name ec2-s3-access --assume-role-policy-document file://trust-policy.json
+    $ aws iam create-policy --policy-name S3AccessPolicy1 --policy-document file://s3-access-policy.json
+    $ aws iam attach-role-policy --role-name ec2-s3-access --policy-arn arn:aws:iam::664418994073:policy/S3AccessPolicy1
+
+
+Q2. s3 bucket management
+   	a. create an s3 bucket named as mybuckt9843
+  	b. enable the versioning and server side encryption for the bucket
+   	c. upload sample file test.txt to s3 bucket
+   	d. make the uploaded file publicly accessible using an acl
+  	e. list all objects in the bucket and delete the uploaded files from the bucket.
+
+Commands:
+
+    $ aws s3api create-bucket --bucket mybuckt9843 --region us-west-2 --create-bucket-configuration LocationConstraint=us-west-2
+    $ aws s3api put-bucket-versioning --bucket mybuckt9843 --versioning-configuration Status=Enabled
+    $ aws s3api put-bucket-encryption --bucket mybuckt9843 --server-side-encryption-configuration '{
+        "Rules": [{
+             "ApplyServerSideEncryptionByDefault": {
+                 "SSEAlgorithm": "AES256"
+                }
+          }]
+      }'
+
+    $ aws s3api cp text.txt s3://mybuckt9843/
+    $ aws s3api put-object-acl --bucket mybuckt9843 --key text.txt --acl public-read
+    $ aws s3api put-public-access-block --bucket mybuckt9843 --public-access-block-configuration BlockPublicAcls=false
+    $ aws s3api ls s3://mybuckt9843/
+    $ aws s3api delete-object --bucket mybuckt9843 --key test.txt
+
+
+Q3. create a vpc and its components using aws cli
+      a. create an ec2 instance using custome vpc
+
+Commands:
+
+    $ aws ec2 create-vpc --cidr-block 10.0.0.0/16 --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=MyVPC}]'
+    $ aws ec2 create-subnet \
+      --vpc-id vpc-08158bb03b52e2511 \
+      --cidr-block 10.0.1.0/24 \
+      --tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=my-ipv4-only-subnet}]'
+    $ aws ec2 create-internet-gateway \
+      --tag-specifications ResourceType=internet-gateway,Tags=[{Key=Name,Value=my-igw}]
+    $ aws ec2 attach-internet-gateway \
+      --internet-gateway-id igw-08244497a7f086709 \
+      --vpc-id vpc-08158bb03b52e2511
+    $ aws ec2 create-route-table --vpc-id vpc-08158bb03b52e2511
+    $ aws ec2 create-route --route-table-id rtb-0cb8a5c0d333c8eab --destination-cidr-block 0.0.0.0/0 --gateway-id igw-08244497a7f086709
+    $ aws ec2 associate-route-table --route-table-id rtb-0cb8a5c0d333c8eab --subnet-id subnet-0e77f4c2a541ce1e5
+    $ aws ec2 create-security-group --group-name MySecurityGroup --description "My security group for ec2" --vpc-id vpc-08158bb03b52e2511
+    $ aws ec2 authorize-security-group-ingress \
+      --group-id sg-04c805134aef3b2ad \
+      --protocol tcp \
+      --port 22 \
+      --cidr 0.0.0.0/0
+    $ aws ec2 run-instances --image-id ami-087f352c165340ea1 \
+      --count 1 --instance-type t2.micro \
+      --security-group-ids sg-04c805134aef3b2ad --subnet-id subnet-0e77f4c2a541ce1e5
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+what is 2x,3x,4x and 5x errors
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

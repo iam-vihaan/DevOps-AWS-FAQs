@@ -1,0 +1,183 @@
+                                              ################# Terraform  ###########
+
+
+
+# In terraform there are four phases:
+  a.terraform init -- it will initialize the backend, creates working directory(.terraform) and downloads the providers plugins in the .terrafrom dirctory and creates the terrafrom.lock file
+  b.terraform validte -- it will validat the terraform config files syntax
+  c.terraform plan  -- it will tell us what are the resources that are going to create, change and destroy. It will clearly shows us the execution plan
+  d.terraform apply -- it will show us the execution plan again and asks us confirmation to proceed with creation of resources..once it is done then it will shows us how many created, changed and destryed
+  e.terraform destroy -- it will shows us plan again what are the resources that going to destroy and it will asks us for confirmation
+  d.terraform plan destroy -- it will show the destroy plan
+  f.terraform show -- shows the current state of the terraform.tfstate
+
+impGithubudemylink: https://github.com/stacksimplify/hashicorp-certified-terraform-associate.git -- for practice
+  
+# Variables
+ a.input variables
+ b.output variables
+  
+while trying to provision the aws infrastructure we have to write the provider and resource etc 
+we do not need to hardcore the values in the main.tf instead that we can provide the values in the terraform.tfvars or any other name like dev.tfvars ( while running the terraform apply command need to pass the file name ) and we can give all varibles in a saperate file called variables so that everything will be in an organized way and easy to access for the devops team to modify.
+
+# terraform state file:
+
+terraform state file is the heart of the terraform it will store all the information that it has created the infrastructure. Its like a database for the infrastructure state.
+ex: ec2 instance,vpc etc and it stores the sensitive info like github username and passwords etc..
+
+# terraform_desired_state: nothing but the state which we defined the terraform configuration files for resource infra
+# terraform_current_state: nothing but the state of resource infrastructure actually existing on my cloud
+# aws_s3 bucket role in terraform state file:-
+
+1. when we use terraform modules from the VSC (version control systems like github ) so in order to hide provide security to state file we need to configure backend ( aws-s3 storage ) in the terraform project so that the state file will be stored in the s3 then it won't visible on the local machine by using s3 storage we can mangae security for the state file.
+
+2. to configure above step we need to write terraform code in an backend.tf file ( check official doc ...terraform.io/s3/backend configuration)
+
+terraform show -- this command helps to show the existence of terraform state file
+
+terraform.lockfile:
+
+lockfile is a mechanism uses in the software development to lock the specific versions of the dependincies to ensure that everyone working on a project is using the same set of dependencies 
+
+For terraform lock file is for maintaing the specfic versions of the terraform itself which makes the team of devops to work on the same versions of the terraform and its providers and reduces the risk of uexpected issues arising from the different versions
+
+Secret information management system:
+
+1. How to integrage terraform with Hasihicorp valut to mangae sensitive data.
+
+Store sensitive data in a secret management system. A secret management system is a dedicated system for storing sensitive data, such as passwords, API keys, and SSH keys. Terraform can be configured to read secrets from a secret management system, such as HashiCorp Vault or AWS Secrets Manager.
+
+# terraform module:
+
+In terraform a module is a collection of terraform files. using tf modules we can reuse the tf code and which helps us to organise the tf code in a better way.
+* root module is the default module and child module is the custome module
+
+### How to write terraform code ##
+
+we just need to type as "terraform aws resource name" in google ex: terraform aws security_groups, terraform aws ec2_instance etc
+Terraform:
+===========================
+1) What is statefile and what is the use of it ?
+2) where you are keeping the statefile ?
+3) how to declare a varible ?
+4) what is the difference between provisioner and provider?
+5) how pass a value from one resource block to another ?
+6) how to reuse a module?
+7) what is the difference between Terrform init and terraform apply?
+8) how to validate the the terraform file ?
+9) what terraform plan does?
+10) how to create 10 ec2 instance using the same script ? ( count= 10)
+11) By mistake if you downgrade the instance from t2.large to t2.micro ,then what will happen when you run the terraform script?
+
+
+# how to fetch user_data arguments from the terraform registry ##
+
+go to terraform aws ec2_instance resource, search for user_data and search for file_function
+
+user_data = file("${path.module}/hello.txt")
+Hello World
+
+
+
+
+
+
+									## terraform basic commands ##
+
+## Initializing terraform commands ##
+
+terraform init     			 		-- intitialise the working directory for cofiguration files and downloads the required plugins which we specified and configures the backend state 
+terraform init -upgrade 				-- it will upgrade the provider plugins to the latest acceptable version.
+terraform get 				 		-- downloads and updates the modules from its sources.
+
+## Making infra changes ##
+
+terraform plan 				 		-- shows the execution plan that it is going to create desired state of infra
+terraform plan -out=<filename> 	 		-- it will save the execution plan to a output file.
+terraform plan -target <resource name> 		-- it will shows the plan of a specific resource.
+terraform plan -replace <resource> 			-- to force a plan to replace a specific resource.
+terraform plan -var '<key>=<value>' 		-- set a value for one of the input variable.
+terraform plan -refresh-only 				-- inspect resource drift without updating the state file.
+terraform apply 						-- to create desired infra or to update it.
+terraform apply <file> 					-- to create or infra using a planned file.
+terraform apply -target <resource> 			-- to create or update a specific.
+terraform apply -replace <resource> 		-- force the replacement of a specific resource.
+terraform apply -auto-approve 			-- skip interactive approval for plan before apply.
+terraform apply -var-file="variables.tfvars"    -- to create infra using specific var.tfvars file.
+
+
+## Inspecting output values ##
+
+terraform output 						-- to show all output values.
+terraform output -json 					-- to show all
+terraform output -raw <name>  			-- to show a sepcific output value without quotes.
+
+## Managing state ##
+
+terraform refresh                         	-- update the statefile to match the existed infra.
+terraform show                            	-- to show the current state of the existed infra.
+terraform show <file>                     	-- to show a saved plan
+terraform show -json <file>               	-- to show the plan in json format
+terraform state list                      	-- list all resources in the state file.
+terraform state rm <resource>             	-- to remove a resource from the state file.
+terraform state mv <source> <dest>        	-- to rename a resource in the state file.
+terraform state replace-provider <from> <to>  	-- to replace provider for the resources in the state.
+terraform import <resource> <remote_id>       	-- import existing infra into terraform 
+terraform state pull                          	-- pull current state and output to stdout.
+
+## Tainting resources ##
+
+terraform taint <resource>                    	-- Mark a resource to be replaced.
+terraform untaint <resource>                  	-- mark a resource as no longer as tainted.
+
+## Destroying infra ##
+
+terraform destroy                             	-- destroy infra managed by terraform.
+terraform destroy -target <resource>          	-- destroy a specific resource.
+
+## Formatting and validation ##
+
+terraform validate                            	-- to check the configuration files or valide or not.
+terraform fmt                                 	-- to reformat your configuration in the standard style
+terraform fmt -check                          	-- check whether the configuration is formatted correctly, return non-zero exit code if it is not done.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

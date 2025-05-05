@@ -1,0 +1,42 @@
+Helm:
+* A package manager for Kubernetes that simplifies the process of deploying, managing, and updating applications and services on Kubernetes and maintains the consistency.
+* Helm uses charts to define, install, and manage Kubernetes applications.
+
+Chart:
+* A  Helm chart is a collection of files that describe a set of Kubernetes resources (such as deployments, services, config maps, etc.) 
+*  and the configuration values required to deploy and manage an application. A chart can be thought of as a "blueprint" for deploying a particular application or service.
+
+Helm chart components:
+
+chart.yaml -- it contains the metadata of the chart like name of the chart, app version, chart version and apiversion of the chart, a brief description of the chart's purpose etc
+values.yaml -- the values.yaml contains the default values for the chart like replica count,port services,types,image etc, we can override these values --set flags or manually or we can upgrade through helm
+templates -- the template direcotry contains the kubernetes resource manifest files
+
+helm charts will be available in a remote public repos, a helm repo is a collection of packaged charts
+we can add the repos in and we can install the charts through this repos 
+
+ex: helm stable and prometheus-community are the public repos
+
+we can install charts with command like 
+
+helm install release-name reponame/chart-name
+
+helm upgrade myrelease-name reponame/chart-name --- we can upgrade by modifying the values.yaml in the chart or we can pass values.yaml in the cli as -f values.yaml
+
+Imp cmds:
+
+helm create chart-name  -- to create a chart
+helm install release-name chart-name -n namespace
+helm list -- it wil list all releases
+helm upgrade release-name chartname
+helm rollback release-name revision-number
+helm uninstall release-name  -- it will remove rlease and its associated k8s resources 
+helm history release-name -- to ge the revision numbersl list
+
+through a remote repo:
+
+helm repo add repo-name url
+helm repo update
+helm install release-name repo-name/chart-name
+helm upgrade release-name repo-name/chart-name
+

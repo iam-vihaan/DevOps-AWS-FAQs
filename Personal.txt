@@ -1,0 +1,47 @@
+MyIntroduction for DevOps:
+ 
+ 
+"Hello, my name is Hari, i am from andhra pradesh, i hold a bachelors degree from JNTU anantpur. 
+ I have total 4.4 years of experience in the IT industry focussing on production support DevOps engineer roles.
+ Previously i worked as a DevOps engineer with Infibeam Avenues Limited from 2021 oct to 2025.
+ my exprience with the range of technologies are linux administration, docker, kubernetes, git, jenkins,githubactions, aws , terraform
+ and i have also hands-on experience with monitoring tools such as prometheus, grafana, elk stack and dynatrace.
+ 
+Infra part:
+
+coming to my roles and responsibilities.
+In my previous company as a DevOps Engineer, i was reponsible for provisioning the aws cloud infra resources like provisioning s3 bucket with best pracitces
+like enabling vesioning,configuring life cycle rules,enabling crr and srr and provisioning  eks with node group and provisiong serverless architecure resources like  eks wit fargate according to the requiremens and creating
+necessary roles and policies like eks-cluster policy, node policies and cni policies and fargate profiles.and provisioning ecs clusters with fargate launch type by creating ecstask execution roles and task roles
+and provisioning application load balancerrs and creating lambda functions and integrating them with api gateways, s3 buckets and dynamodb for event driven
+and creating ecr repos for maintaing docker images, creating ebs volumes and attaching them to the ec2 instances and creating dynamodb and rds instances. provisiong cloudwatch and xray resources and integrating them with various services for analysing logs and traces by writing the terraform code and automating all thes stuff with using cicd githubactons workflow.
+
+Containerization and kubernetes:
+
+apart from that  according to the dev needs i was responsible for writing the custom dockerfiles with dockerfile instructions and multistage dockerfiles as well to reduce the size of the image and then
+building the docker images, taging them with repos and pushing them to remote repos like ecr and docker hub according requirements.
+
+i am also responsible for creating k8s clusters and upgrading them, taking backups, creating pods throug deployments,daemonsets and replicasest and exposing them to loadbalancers
+and creating k8s ingress resources and implementing with ingress controllers.
+
+Release management part:
+
+apart from that as a DevoPs Engineer i was responsible for Efficiently managing weekly production code releases, resolve build errors, and maintain formal release records to ensure accurate tracking of release contents and changes. 
+And also responsible for coordinating with cross-functional teams to ensure smooth deployments  Additionally.
+ 
+Production and monitoring:
+
+1. I monitor the production servers health and application traffic throuh grafana and kibana visualization tools and if any icidents arises i will address them and resovle them
+2. I monitor the API services throughputs, failure rates and resposetimes through dynatrace and if i address  incedents related to other microservcie stakeholders i will join on the bridge and  coordinate with them to identify the rootcause and do a follow up with them.
+3. i monitor the sensu for system alerts like high cpu.memory, like app pod restarts and node health issues
+4. troubleshooting production server related issues by verifying the syslogs. 
+6. i was participate in quarterly os patching activities with the team to validate the vms
+7. and also responsible for productions servers capacity planing based on traffic trends like adding more vms into cluster or vertically scaling the resources. etc
+
+Additional responsibilities:
+
+8. Responsible for writing the formal RCA documents for production related incidents to prvent them in the  future
+9. performing the password expiry related tasks on uat and preprod envronments
+ 
+these are the roles and responsibles currently which i am doing here right now.
+ 

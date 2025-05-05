@@ -1,0 +1,57 @@
+# GIT Important notes 
+
+$ git commit <file name> -> to see who made code changes in a file.
+git show -> to see the latest commit id
+commit id is the snapshot or the version of the code
+$ git add .  -- it will add modified,new and delete files to the staging area
+$ git add <filename>  -- to stage a specific file
+$ git add file1 file2 file3  -- to stage multiple specific files
+$ git add directory_name/   -- to stage files in a specific directory
+$ git add -u  -- it will add files which are updated and already present
+$ git log --oneline -> it will gives the commits info in oneline
+$ git restore --stagged <file name>  -> it will remove the info from staging area and put back all files from staging area
+$ git ls-files -> it will list all the files which are there in the staging area.
+$ git show -HEAD -> shows the always pointing to current commit
+$ git show -HEAD~1 it will show previous commit details.
+$ git remote add origin https://github.com/8555936327/Git-practice.git  --> to config the remote Git repo with local Git repo use this command
+$ git branch --list -> to list the branches 
+$ git ls-remote origin --> to list the remote repo branches
+$ git checkout origin/branch-name --> to checkout to the remote repo branch
+$ git branch -d <branch name>
+$ git branch -D 
+$ git push origin master --> to push local branch to remote -- if it gives error use git-hub token instead of password   --  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
+$ ls -la --> it will show whether the staging area and commit area are initialized or not
+$ git ls-files   --> it will list all files which are added to staging area
+$ git restore --staged <filename>
+$ HEAD --> It is a pointer it alwasy points to the current commit id, on top that changes will be applicable
+$ git show --> always shows the latest commit id
+$ git add -p --> shows the current change in fully
+$ git init - to create an empty repo
+$ git config --global user.name "username"
+$ git config --global user.email "email"
+Very imP:
+
+git reset --soft HEAD~1  -- to undo the latest commit and to move the branch pointer to the previous commit hash
+git reset --mixed HEAD~1 or git reset HEAD~1  -- it will undo the latest commit and remove the staged files from staging area
+git reset --hard HEAD~1 -- it will undo the commit, unstage the files and remove the changes from working directory and keep the working dirctory with original changes
+
+git revert commithash -- it will just enable us to make changes for the specified commit message and it will create a new commit on top of it
+git commit --amend    -- it is used to modify the commit message. it is usefull whenever you forgot to add some files in the last commit you can stage those files and ammedn commit then it will create another commit with modified message and it includes all files and creates new commit id hash
+git rebase -i HEAD~4   --- if i want to remove a specific commit and i want to discard the changes related to that specific commit, if my required commit is in the top 4, if we run that commmand it will open interactive mode there will be four commits then we need to select which commit we want to discard changes on that commit ther will be pick option we have to replace that with drop then save and quit then git will remove that commit id and discard all changes
+
+#How to add ssh-key to the git-hub account
+
+$ ssh-keygen -t rsa -b 4096 -C "your_email@example.com"  -- to generate ssh-key
+$ eval "$(ssh-agent -s)" -- start the ssh agent by running this command
+$ ssh-add ~/.ssh/id_rsa  -- add ssh-key to the ssh agent
+$ cat ~/.ssh/id_rsa.pub  -- copy the ssh-pub key and add to your github account ( paste the key and give the title name)
+$ ssh -T git@github.com  -- test the ssh-key
+$ git remote set-url origin git@github.com:username/repository.git  -- replace username and repo, should be able clone or fetch.
+
+
+#### My personal Github accoutn Credentials ####
+
+username: 8555936327
+Github token: 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
+
+
