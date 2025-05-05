@@ -1,0 +1,135 @@
+1. create table:
+
+Login to the AWS Management Console
+From Services, find and navigate to the DynamoDB console 
+From the DynamoDB page, choose Create table.
+For Table name, enter serverless_workshop_intro.
+For Partition key name, enter _id.
+For Partition key type, choose String.
+Accept default settings, then choose Create table.
+
+2. add items in the console
+
+From the navigation pane, choose Explore items.
+Select the serverless_workshop_intro table.
+Choose Create item.
+If not already selected, choose the Form view for easier data entry.
+For _id, enter 1.
+Choose Add new attribute, select String.
+For Attribute Name, enter Name, and for value, enter your name.
+Choose Create item.
+
+3. create a lambda function to add data
+
+Create a new Python function called: m1-add-sample-data.
+
+import boto3
+import uuid
+
+def lambda_handler(event, context):
+    table_name = 'serverless_workshop_intro'
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table(table_name)
+
+    result = None
+    people = [
+            { 'userid' : 'marivera', 'name' : 'Martha Rivera'},
+            { 'userid' : 'nikkwolf', 'name' : 'Nikki Wolf'},
+            { 'userid' : 'pasantos', 'name' : 'Paulo Santos'},
+        ]
+
+    with table.batch_writer() as batch_writer:
+        for person in people:
+            item = {
+                '_id'     : uuid.uuid4().hex,
+                'Userid'  : person['userid'],
+                'FullName': person['name']
+            }
+            print("> batch writing: {}".format(person['userid']) )
+            batch_writer.put_item(Item=item)
+            
+        result = f"Success. Added {len(people)} people to {table_name}."
+
+    return {'message': result}
+
+Verify the table_name is the same as the DynamoDB table you created earlier
+
+Choose Deploy.... wait a few seconds...
+
+4. add the necessary permissiions to the iam role of lambda function to add data to the dynamodb table
+
+Choose Configuration, and then Permissions from the navigation pane.
+In the Execution role section, click the Role name link to view that role in the IAM console.
+In Permissions policies, choose Add permissions and then Attach policies.
+For the filter, enter dynamodb.
+Select the check box next to the Policy name for AmazonDynamoDBFullAccess.
+Choose Add permissions.
+
+
+5. create a function to retrieve a data
+
+You need a function to read data for your API. You want it to be secure, so it will only be permitted to read values from the table, not create, update, nor delete items.
+
+create a new lambda function
+
+Create a new Lambda function from scratch running with Python called: get-users
+
+Paste in the following code:
+
+import boto3
+
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table('serverless_workshop_intro')
+
+def lambda_handler(event, context):
+  data = table.scan()
+  return data['Items']
+
+
+Update the execution role to add the policy AmazonDynamoDBReadOnlyAccess to grant the function read-only access.
+
+Deploy and Test the function.
+
+6. connect a url with api-gateway
+
+create an api
+
+In the console, go to the API Gateway service
+Make sure you have chosen the new console experience.
+Choose the REST API API type, then Build.
+For API name, enter ServerlessREST; keep the default endpoint type of Regional.
+Choose Create API to continue.
+
+create a resource in the rest api
+
+You now have an API with an empty root element. You need to define a Users resource and path.
+
+Choose Create Resource.
+For the Resource name, enter users.
+Choose Create Resource.
+
+create a method for the rest resource
+
+Lastly, you will create a method under the Users resource that corresponds to an HTTP method. You will bind that method to the get-users Lambda function.
+
+Select /users, then choose the Create method button.
+For Method type, Select GET
+For Integration type, choose Lambda Function.
+Select the region where your get-users Lambda function was created (it should be selected by default)
+To find the Lambda Function, start entering the function name: get-users then choose it it.
+Choose Create method
+
+Deploy the api
+
+Choose the Deploy API button.
+For Deployment stage, choose New stage.
+For stage name, enter v1.
+For deployment description, enter Initial rollout of the API!.
+Choose Deploy
+
+api invoke url will be in this format
+
+https://<UNIQUE-ID>.execute-api.<REGION>.amazonaws.com/<STAGE>/<RESOURCE>
+
+Append users to the URL to invoke the /users resource and try again!
+

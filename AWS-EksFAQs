@@ -1,0 +1,358 @@
+Q1 What is Amazon EKS?
+
+	EKS (Elastic Kubernetes Service) is a managed Kubernetes service provided by AWS. With EKS, you can easily 
+	deploy and manage containerized applications using Kubernetes on AWS without needing to install, 
+	operate, and maintain your own Kubernetes control plane.
+
+
+Q2 What is Kubernetes?
+
+	Kubernetes (often shortened to K8s) is an open-source container orchestration platform that automates the deployment,
+ 	scaling, and management of containerized applications.
+
+
+Q3 Why should I use Amazon EKS?
+
+	Amazon EKS is a fully managed Kubernetes service provided by AWS, designed to simplify the deployment, management, 
+	and scaling of containerized applications using Kubernetes. It eliminates the need for manual setup and configuration, 
+	allowing developers and operations teams to focus on their applications rather than the underlying infrastructure.
+
+		Key Features of Amazon EKS:
+	1. Managed Control Plane: Amazon EKS automatically detects and replaces unhealthy control plane nodes and patches the control plane.
+	2. Integrated Networking: EKS seamlessly integrates with Amazon Virtual Private Cloud (VPC) for networking, allowing you isolate your Kubernetes clusters.
+	3. Multi-AZ High Availability: EKS automatically deploys Kubernetes control plane components across multiple Availability Zones to provide high availability.
+	4. IAM Integration: EKS integrates with AWS Identity and Access Management (IAM) to control access to Kubernetes resources. enabling fine-grained permissions.
+
+Q4 How does Amazon EKS work?
+
+	Amazon EKS works by provisioning (starting) and managing the Kubernetes control plane and worker nodes for you. Kubernetes consists of two major components: 
+	a cluster of 'worker nodes' running your containers, and the control plane managing when and where containers are started on your cluster while monitoring their status.
+	Without Amazon EKS, you have to run both the Kubernetes control plane and the cluster of worker nodes yourself.This  allows you to focus on building 
+	applications instead of managing AWS infrastructure.
+
+Q5 Which operating systems does Amazon EKS support?
+
+Amazon EKS supports Kubernetes-compatible Linux x86, ARM, and Windows Server operating system distributions. 
+Amazon EKS provides optimized AMIs for Amazon Linux 2, Bottlerocket, and Windows Server 2019.
+
+Q6 What is the Amazon EKS Connector?
+
+The Amazon EKS Connector can connect the following types of Kubernetes clusters to Amazon EKS.
+On-premises Kubernetes clusters
+Self-managed clusters that are running on Amazon EC2
+Managed clusters from other cloud providers
+
+to register and connect any Kubernetes cluster to AWS and view it in the Amazon EKS console. After a cluster is connected, you can see the status, 
+configuration, and workloads for that cluster in the Amazon EKS console.
+
+Q7 Can I connect a cluster outside of an AWS Region?
+
+	Yes, you can connect a cluster outside of an AWS Region to Amazon EKS using the EKS Connector, allowing you to register and manage any conformant Kubernetes 
+	cluster, including those running on-premises or outside of AWS, from the Amazon EKS console.
+
+	Register the Cluster:
+	aws eks register-cluster \
+  	--name my-external-cluster \
+  	--connector-config roleArn=arn:aws:iam::<id>:role/AmazonEKSConnectorAgentRole,provider="OTHER" \
+  	--region us-west-2
+ 
+	After running the command, you will receive an activationId and activationCode
+
+	Install the EKS Connector Agent:
+
+	helm install eks-connector eks/eks-connector \
+  	--set activationId=abc123 \
+  	--set activationCode=def456 \
+  	--set region=us-west-2
+
+
+ Q8 How does Amazon EKS handle security?
+
+	Amazon EKS security follows a shared responsibility model, with AWS managing the Kubernetes control plane and customers responsible for securing 
+	their workloads and configurations within the cluster.
+
+	AWS Responsibilities:
+	Security of the Cloud:
+	AWS is responsible for securing the infrastructure that runs AWS services, including the Kubernetes control plane, control plane nodes, and etcd database. 
+	Managed Kubernetes Control Plane:
+	AWS manages the availability, scalability, and security of the Kubernetes control plane, including the API server, scheduler, and etcd. 
+	Customer Responsibility: You are responsible for security in the cloud, which includes configuring the security of the data plane, 
+	managing network controls, and securing your applications and data
+
+Q9 What are the pricing models for Amazon EKS?
+
+	You pay $0.10 per hour for each Amazon EKS cluster you create and for the AWS resources you create to run your Kubernetes worker nodes. 
+	You only pay for what you use, as you use it; there are no minimum fees and no upfront commitments.
+	Extended Kubernetes version support	$0.60 per cluster per hour
+	Standard Kubernetes version support	$0.10 per cluster per hour
+
+
+Q10 How do I Get started with Amazon EKS using AWS cli?
+
+
+
+Step 1: Create cluster IAM role
+eks-cluster-role-trust-policy.json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "eks.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+aws iam create-role --role-name myAmazonEKSClusterRole --assume-role-policy-document file://"eks-cluster-role-trust-policy.json"
+
+assign the Amazon EKS managed policy: aws iam attach-role-policy --policy-arn arn:aws:iam::aws:policy/AmazonEKSClusterPolicy --role-name myAmazonEKSClusterRole
+
+aws iam attach-role-policy --role-name myAmazonEKSClusterRole--policy-arn arn:aws:iam::aws:policy/AmazonEKSServicePolicy
+
+Step 2: Create cluster
+aws eks create-cluster --name my-eks-task-cluster --role-arn arn:aws:iam::<account-id>:role/my-eks-task-cluster-role \
+--resources-vpc-config subnetIds=subnet-<id>,subnet-<id>
+Node Group
+aws eks create-nodegroup --cluster-name my-eks-task-cluster --nodegroup-name my-eks-task-nodegroup --node-role arn:aws:iam::<account-id>:role/my-eks-task-node-role \
+--subnets subnet-<id> subnet-<id> --scaling-config minSize=1,maxSize=3,desiredSize=2 --disk-size 20 --instance-types t2.medium
+Update your kubeconfig file to use the new EKS cluster
+
+aws eks update-kubeconfig --name my-cluster --region aws-region
+
+
+
+Q10 How do i upgrade my Kubernetes version in Amazon EKS?
+
+	Upgrade the Control Plane:
+	AWS Console:
+	Navigate to the EKS console, select your cluster, and choose "Update cluster version". 
+	Select the desired Kubernetes version from the dropdown and click "Update". 
+	AWS CLI:
+	Use the aws eks update-cluster-version command. 
+	For example: aws eks update-cluster-version --name <cluster-name> --version <kubernetes-version>
+
+	Upgrade the Data Plane (Worker Nodes):
+	Managed Node Groups:
+	The AWS console will notify you of available updates for managed node groups.
+	Click "Update now" to update the node group.
+
+Q11 How does Amazon EKS handle high availability(HA)?
+
+	Amazon EKS achieves high availability (HA) by running and scaling the Kubernetes control plane across multiple AWS Availability Zones (AZs).
+
+	Automatic Patches:
+	EKS automatically patches the control plane to maintain security and stability. 
+
+	Automatic Scaling and Health Checks:
+	EKS automatically scales control plane instances based on load and detects and replaces unhealthy control plane instances, ensuring continuous operation. 
+
+
+
+Q12 How do I connect an on-premises Kubernetes cluster to Amazon EKS?
+
+Register the Cluster:
+aws eks register-cluster \
+  --name my-external-cluster \
+  --connector-config roleArn=arn:aws:iam::<id>:role/AmazonEKSConnectorAgentRole,provider="OTHER" \
+  --region us-east-1
+After running the command, you will receive an activationId and activationCode
+ 
+Install the EKS Connector Agent:
+ 
+helm install eks-connector eks/eks-connector \
+  --set activationId=abc123 \
+  --set activationCode=def456 \
+  --set region=us-west-2
+
+Q13 How does Amazon EKS integrate with other AWS services?
+
+
+	Amazon EKS (Elastic Kubernetes Service) integrates with various AWS services for enhanced functionality, including 
+	AWS Identity and Access Management (IAM) for access control, Amazon Virtual Private Cloud (VPC) for 
+	networking, and AWS CloudTrail for logging and monitoring. 
+
+	Amazon Elastic Kubernetes Service (EKS), focus on security, cost optimization, and operational efficiency, including implementing strong cluster 
+	configuration, network policies, and access control, while leveraging features like Fargate and managed node groups. 
+
+
+	IAM Roles for Service Accounts: Use IAM roles for service accounts to grant fine-grained permissions to your pods.
+	Health Checks: Implement health checks for your applications to ensure they are running correctly
+	Network Policies: Implement Kubernetes Network Policies to control traffic between pods
+	Multi-AZ Deployments: Deploy your EKS cluster across multiple Availability Zones for high availability
+
+Q14 What are Kubernetes health checks and why are they important?
+
+	mechanisms that verify the operational status of applications running in pods, ensuring they are healthy and ready to receive 
+	traffic, and automatically restarting unhealthy containers.
+
+
+Q15 What are the different types of health checks in Kubernetes?
+
+	Liveness Probes:
+	These probes determine if a container is still running and functioning correctly. If a liveness probe fails, Kubernetes will restart the container. 
+	Readiness Probes:
+	These probes determine if a container is ready to accept traffic. If a readiness probe fails, Kubernetes will stop routing traffic to the 
+	pod until the probe passes again. 
+	Startup Probes:
+	These probes are used to delay the startup of a container until it is fully initialized and ready to handle requests.
+
+Q15How do you configure a liveness probe in a Kubernetes pod?
+
+
+define it within the container specification of your pod's YAML file
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+  - name: my-container
+    image: my-image:latest
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: 8080
+      initialDelaySeconds: 15
+      periodSeconds: 10
+      
+Q16 What is the purpose of a readiness probe?
+
+determines when a container is ready to start accepting traffic, ensuring that no traffic is routed to a 
+container until it's fully initialized and operational. 
+ 
+Example:
+ 
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 80
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+
+Q17 Can you explain the difference between liveness and readiness probes?
+
+Liveness probes monitor if a container is alive and functioning correctly, and if they fail, the container is restarted. Readiness probes, on the other hand, 
+determine if a container is ready to receive traffic, and if they fail, the container is removed from the load balancer until it becomes ready again.
+
+Q18 What are common issues with health checks?
+
+  False positives: Probes may fail due to temporary issues, leading to unnecessary restarts or traffic rerouting.
+Incorrect configuration: Misconfigured probes can cause healthy containers to be marked as unhealthy.
+unable to pull images images bcz resouces and wrong credentials.
+
+
+
+Q19 What is the Horizontal Pod Autoscaler (HPA) in Kubernetes?
+
+
+feature that automatically adjusts the number of pods (replicas) in a deployment or replica set based on observed CPU utilization or other metrics.
+
+How does the HPA work?
+Prerequisites
+Kubernetes Cluster: Ensure you have a running Kubernetes cluster.
+Metrics Server: Install and configure the Kubernetes Metrics Server.
+Install Metrics Server: kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+Verify the Metrics Server is running: kubectl get deployment metrics-server -n kube-system
+
+Create a Deployment YAML file (nginx-deployment.yaml):
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "250m"
+            memory: "256Mi"
+Apply the Deployment:
+
+kubectl apply -f nginx-deployment.yaml
+
+kubectl expose deployment nginx-deployment --port=80 --target-port=80
+
+Step 3: Create the HPA
+
+Create an HPA YAML file (hpa.yaml):
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nginx-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-deployment
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 50
+
+Apply the HPA:
+kubectl apply -f hpa.yaml
+kubectl get hpa
+
+Step 4: Generate Load to Test HPA
+To see HPA in action, we need to generate load on the Nginx deployment.
+
+Deploy a Load Generator Pod:
+
+Create a YAML file for a load generator pod (load-generator.yaml):
+apiVersion: v1
+kind: Pod
+metadata:
+  name: load-generator
+spec:
+  containers:
+  - name: busybox
+    image: busybox
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do wget -q -O- http://nginx-deployment.default.svc.cluster.local; done"]
+kubectl apply -f load-generator.yaml
+
+Q20 What metrics can be used with HPA?
+
+
+HPA (Horizontal Pod Autoscaler) uses various metrics to determine when to scale a workload. 
+These include resource metrics like CPU and memory utilization, custom metrics like queue length or request rates, and external 
+metrics from sources outside the Kubernetes cluster. 
+
+Q21 What are the benefits of using HPA?
+
+Automatic Scaling: HPA automatically adjusts the number of pods in a deployment, or replication controller based on current resource usage, such as CPU or memory.
+Cost Saving:  By scaling pods up or down based on demand, HPA helps in optimizing resource utilization
+Scalability: HPA supports horizontal scaling, which means it increases or decreases the number of pod instances rather 
+than adjusting the resources allocated to a single pod.
+
+Q22 What are some common challenges when using HPA?
+
+Common challenges with Horizontal Pod Autoscaler (HPA) include insufficient time to scale during sudden demand spikes, misconfigured resource requests/limits leading 
+to unnecessary scaling, and difficulty in tuning HPA parameters for optimal performance.
+
+Q23 How can you monitor the performance of HPA?
+
+Metrics Server: The Metrics Server is a core component that collects resource usage data (CPU, memory) from nodes and pods in your cluster. 
+HPA relies on this data to make scaling decisions1.
+Kubernetes Dashboard: The Kubernetes Dashboard provides a visual interface to monitor the status of your HPA, including current metrics and the number of replicas.
+Prometheus and Grafana: Integrating Prometheus with Grafana allows you to set up detailed monitoring and alerting for HPA. Prometheus collects metrics from the 
+Metrics Server, and Grafana visualizes these metrics in customizable dashboards1.
+Logs and Events: Monitoring logs and events in your Kubernetes cluster can provide insights into HPA actions and any issues that may arise. 
+You can use tools like kubectl logs and kubectl get events to access this information

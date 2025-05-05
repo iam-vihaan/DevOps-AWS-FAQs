@@ -1,0 +1,214 @@
+###  ALB - FAQS   ###
+
+
+Q. What is an Application Load Balancer (ALB)?
+
+An Application Load Balancer (ALB) is a service in AWS that distributes incoming application traffic across multiple targets, 
+such as EC2 instances, containers, or IP addresses. It operates at the application layer (Layer 7) of the OSI model, enabling routing based on content (e.g., URL paths, host headers, query parameters).
+ALBs support advanced features like SSL termination, WebSocket support, and path-based routing. They're typically used for web applications and microservices.
+
+An Application Load Balancer (ALB) distributes traffic based on several factors:
+     
+	1. Host-based Routing: Routes traffic to different target groups based on the hostname in the request. 
+      2. Path-based Routing: Routes traffic based on the URL path. For example, requests to /images/* can be directed to one set of targets, while /api/* can go to another.
+      3. Weighted Routing: You can assign different weights to multiple target groups, allowing you to split traffic between them. 
+         This is useful for blue/green deployments or canary releases.
+      4. SSL (Secure Sockets Layer) and TLS (Transport Layer Security): ALB can offload SSL/TLS termination and then route the decrypted traffic to target groups.
+
+
+
+Q. How does ALB handle SSL termination?
+
+
+   ALB handles SSL termination with SSL/TLS handshake, decrypts incoming HTTPS traffic, and forwards it as HTTP to backend targets.
+
+     Steps:
+
+	* Client sends HTTPS request.
+	* ALB performs SSL handshake and decrypts traffic.
+	* ALB forwards the decrypted traffic to backend as HTTP.
+	* Optionally, re-encrypt traffic between ALB and backend.
+
+     Offloads SSL decryption from backend, simplifies certificate management, and improves performance.
+
+
+
+Q. How does ALB perform health checks?
+
+   ALB performs health checks by periodically sending requests to the health check endpoint of each target in a target group to determine its health status.
+   Here's how it works:
+
+     1. Health Check Configuration: When you create a target group, you define port, protocol, path(eg /appointments)
+     2. Requesting Health Checks: The ALB sends an HTTP/HTTPS request to the target’s health check endpoint (e.g., /health) on the specified port.
+     3. Evaluating Responses:If the target returns a successful response (e.g., HTTP status code 200-399), it is considered healthy.
+                             If the target does not respond or returns an error code (e.g., 500), it is marked as unhealthy.
+
+     4. If a target is unhealthy for a specified number of consecutive checks, it is removed from the pool of routable targets until it becomes healthy again.
+
+     5. Automatic Recovery: Once the target passes the health check again, it is re-added to the routing pool
+
+
+
+
+
+Q. What is path-based routing in ALB?
+
+
+   Path-based routing in an Application Load Balancer (ALB) allows you to route incoming requests to different target groups based on the URL path in the request. 
+   This is useful for directing traffic to different services or microservices within a single domain.
+
+   How it works:
+     
+     When a client sends a request, ALB checks the URL path (e.g., /api/*, /images/*) and matches it to predefined path-based routing rules.
+     The rules determine which target group the request should be forwarded to based on the path
+
+
+
+
+Q. How can I secure traffic between my ALB and my targets?
+
+	Use HTTPS to encrypt traffic between the ALB and targets.
+      using security groups restrict requests to target groups only form ALB
+      using NACL control traffic at subnet level
+      Use private IPs for communication between ALB and targets.
+
+
+Q. How do I configure logging for my ALB?
+
+   using aws CLI:
+
+   1. Create an S3 bucket (if not already created):
+
+     $ aws s3api create-bucket --bucket my-alb-logs-bucket --region us-east-1 --create-bucket-configuration LocationConstraint=us-east-1
+   
+   2. enable access loging on ALB 
+      
+     $ aws elbv2 modify-load-balancer-attributes \
+ 	 --load-balancer-arn <your-alb-arn> \
+  	 --attributes Key=access_logs.s3.enabled,Value=true \
+  	 Key=access_logs.s3.bucket,Value=your-alb-logs-bucket \
+  	 Key=access_logs.s3.prefix,Value=your-prefix
+   
+   3. Set s3 bucket policy for ALB
+
+	aws s3api put-bucket-policy --bucket your-alb-logs-bucket --policy '{
+   "Version": "2012-10-17",
+   "Statement": [
+     {
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "delivery.logs.amazonaws.com"
+       },
+       "Action": "s3:PutObject",
+       "Resource": "arn:aws:s3:::your-alb-logs-bucket/*"
+     }
+   ]
+ }' 
+    
+
+
+
+Q. Can I configure multiple listeners on an ALB?
+
+   A listener is a process that checks for incoming connection requests on a specific port and protocol (e.g., HTTP on port 80, HTTPS on port 443).
+   we can configure multiple listeners on an Application Load Balancer (ALB).Each listener is associated with a specific protocol (HTTP or HTTPS) and port (e.g., 80, 443). 
+   Multiple listeners can be configured to handle traffic on different ports or protocols.
+
+  configure http on port 80 and https on port 443 listeners using aws cli:
+
+  1. aws elbv2 create-listener \
+     --load-balancer-arn <your-alb-arn> \
+     --protocol HTTP \
+     --port 80 \
+     --default-actions Type=forward,TargetGroupArn=<your-target-group-arn>
+
+  2. aws elbv2 create-listener \
+     --load-balancer-arn <your-alb-arn> \
+     --protocol HTTPS \
+     --port 443 \
+     --default-actions Type=forward,TargetGroupArn=<your-target-group-arn> \
+     --certificates CertificateArn=<your-ssl-certificate-arn>
+
+ 
+
+
+Q. How can I monitor my Application Load Balancer?
+
+   We can monitor Application Load Balancer (ALB) using below ways:
+
+   * CloudWatch Metrics: Track metrics like request count, response codes (2xx, 4xx, 5xx), target response time, and active connections.
+   * Access Logs (CloudWatch Logs): Enable access logs to capture detailed request data (client IP, response time, status codes), stored in an S3 bucket.
+   * AWS X-Ray: Trace requests for detailed performance analysis, especially useful in microservices architectures.
+   * CloudWatch Alarms: Set alarms for thresholds like high 5xx errors or unhealthy targets.
+   * Target Health Checks: Monitor the health of your targets to ensure only healthy instances handle traffic.
+
+
+
+Q. How To enable monitoring for your Application Load Balancer (ALB) using the AWS Management Console and AWS CLI?
+
+   1. enable access log for alb ( look at Q6)
+   
+   2. View Cloud watch metrics 
+
+     $ aws cloudwatch get-metric-statistics \
+	  --namespace AWS/ApplicationELB \
+  	  --metric-name RequestCount \
+  	  --dimensions Name=LoadBalancer,Value=<your-alb-arn> \
+  	  --statistics Sum \
+  	  --period 60 \
+  	  --start-time 2025-04-10T00:00:00Z \
+  	  --end-time 2025-04-10T01:00:00Z
+
+   3. Set CloudWatch Alarms:
+
+       aws cloudwatch put-metric-alarm \
+        --alarm-name ALB-High-5xx-Errors \
+  	  --metric-name HTTPCode_ELB_5XX_Count \
+  	  --namespace AWS/ApplicationELB \
+  	  --statistic Sum \
+  	  --period 300 \
+  	  --threshold 100 \
+    	  --comparison-operator GreaterThanThreshold \
+  	  --dimensions Name=LoadBalancer,Value=<your-alb-arn> \
+  	  --evaluation-periods 1 \
+        --alarm-actions arn:aws:sns:us-east-1:123456789012:my-sns-topic
+   
+  4. Enable X-ray
+
+     aws elbv2 modify-load-balancer-attributes \
+ 	 --load-balancer-arn <your-alb-arn> \
+ 	 --attributes Key=access_logs.xray.enabled,Value=true
+
+
+Q. What are the key metrics for ALB monitoring?
+
+   Below are the some of key metrics for ALB monitoring
+
+      1. Request Count: Total number of requests.
+   	2. Active Connections: Number of active client connections.
+	3. Target Response Time: Time taken by targets to respond.
+	4. HTTP Response Codes: Track 2xx, 3xx, 4xx, and 5xx responses.
+	5. Target Health: Number of healthy/unhealthy targets.
+	6. Request & Target Processing Time: Time spent processing by ALB and targets.
+	7. Surge Queue Length: Number of requests in the queue.
+	8. Spillover Count: Number of requests rejected due to queue overflow.
+	
+
+
+
+Q. What are best practices for ALB?
+
+
+   Below are some of best practices for ALB:
+
+  	1. Always use HTTPS and enable access logging.
+	2. Configure health checks for targets to ensure proper routing.
+	3. Leverage path-based routing for microservices and apps.
+	4. Monitor ALB metrics with CloudWatch and set alarms.
+	5. Use AWS WAF to protect against web vulnerabilities.
+	6. Enable Auto Scaling for backend targets.
+	7. Ensure proper security group and network configurations.
+	8. Optimize performance by using target groups, sticky sessions, and minimizing surge queues.
+	9. Use Route 53 for high availability and failover.
+
+
