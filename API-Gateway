@@ -1,0 +1,386 @@
+##SECTION A: Core Concepts & Architecture (1–10)
+
+#1. What is AWS API Gateway and how does it work with backend services like Lambda or HTTP endpoints?
+
+Answer:
+
+AWS API Gateway is a fully managed service for creating REST, HTTP, and WebSocket APIs. It handles request routing, authorization, throttling, caching, and monitoring, providing a serverless "API layer." When a client sends a request:
+API Gateway matches the HTTP method and resource path.
+Applies authorization, validation, throttling, logging.
+Transforms the request via mapping templates if needed.
+Invokes the backend (Lambda, HTTP endpoint, AWS service, or mock integration).
+Processes the backend response using mapping templates.
+Returns the response to the client.
+
+#2. Differences between REST API, HTTP API, and WebSocket API in API Gateway
+
+Answer:
+
+REST API:
+Feature-rich: supports VPC Link, WAF, usage plans, authorizers.
+Higher latency and cost.
+Ideal for enterprise-grade APIs.
+HTTP API:
+Lightweight, lower latency, and cheaper.
+Supports JWT authorizers and Lambda proxy integration.
+Lacks WAF (as of 2025), usage plans, VPC links.
+Great for modern microservices.
+WebSocket API:
+Maintains persistent two-way connection.
+Ideal for chat, real-time notifications.
+Supports authorizers and Lambda integration.
+
+#3. Key components of a REST API: resource, method, integration, stage
+
+Answer:
+
+Resource: URI path fragment (/users, /orders).
+Method: HTTP verbs (GET, POST, PUT, DELETE).
+Integration: Backend type (Lambda, HTTP, AWS service, mock).
+Stage: Deployment environment (e.g., dev, test, prod) with configured logging, throttling, and caching.
+
+#4. Supported backend integration types
+
+Answer:
+
+Lambda (proxy or custom).
+HTTP/HTTPS endpoint.
+AWS service (e.g., DynamoDB).
+Mock (for testing).
+For HTTP APIs: simpler, mostly proxy integrations.
+
+#5. AWS_PROXY vs AWS (non-proxy) integration
+
+Answer:
+
+AWS_PROXY (Lambda proxy): sends full request context and expects a structured response from Lambda. Ideal for rapid development.
+AWS (non-proxy): requires manual mapping templates for request and response transformations. Useful for legacy systems or when abstracting backend details.
+
+#6. Role of a stage and support for versioning
+
+Answer:
+
+Stages represent API deployments, mapping to URLs. You can maintain separate environments (/dev, /test, /prod) and use them for versioning by assigning base paths like /v1 or /v2.
+
+#7. Internal request routing flow
+
+Answer:
+
+Client sends request to https://.../resource.
+API_gateway identifies resource and method.
+Applies authorization, validation, mapping.
+Invokes integration backend.
+Receives, transforms, and returns response.
+
+#8. Base path mapping & custom domains
+
+Answer:
+
+Custom domains (e.g., api.myapp.com) replace default domain. Base path maps segments (/v1, /v2) to API stages.
+🪜 Console Steps:
+API Gateway → Custom Domain Names → Create domain.
+Upload SSL certificate via ACM.
+Create base path mapping to an API and stage.
+Update Route 53 alias record to domain.
+
+#9. Deployment vs stage
+
+Answer:
+
+Deployment: Snapshot of API configuration.
+Stage: Named endpoint (prod) pointing to a deployment. Multiple stages allow managing environments and rolling back easily.
+
+#10. Invoking deployed API endpoint
+
+Answer:
+
+Use HTTP clients like curl, Postman, SDKs, or the AWS Console "Invoke URL" with standard methods (GET, POST) and supported content types like JSON and form-data.
+
+
+##🔹 SECTION B: Configuration & Console Setup (11–20)
+
+#11. Creating and deploying a REST API via Console
+
+Steps:
+
+API Gateway → Create API → REST API.
+Define root resource → Create Resource.
+Add Method → Select integration type → Configure.
+Implement method details (mapping, request validation, auth).
+Deploy → Choose existing or create a new stage.
+
+#12. Method request & method response settings
+
+Answer:
+
+Method Request: define required params, headers, auth, request validator, API key requirement.
+Method Response: specify expected status codes, headers, and body models.
+
+#13. Enabling request validation
+
+Steps:
+
+Method → Method Request → set Request Validator.
+Optionally define Models (JSON schema) for validation.
+
+#14. Mapping templates definition
+
+Steps:
+
+Under Method → Integration Request/Response.
+Add Mapping Template and choose content type.
+Write VTL script to map payload.
+
+#15. Simulating requests using Console "Test" tool
+
+Steps:
+
+Resources → Select Method → Test.
+Enter sample request (headers, query params, body).
+Click Test → View status code, headers, body, and logs.
+
+#16. Configuring throttling at stage level
+
+Answer:
+
+Stages → Stage Editor → Default Method Throttling → set rate and burst. Also configure per-method throttling overrides if needed.
+
+#17. Default method throttling vs usage plan throttling
+
+Answer:
+
+Default throttling: applied globally at stage-level.
+Usage Plans: granular control per API key/client with quotas and individual rate limits.
+
+#18. Enabling logging and X-Ray tracing
+
+Steps:
+
+Stage → Logs/Tracing → Enable CloudWatch Logs and select level.
+Enable X-Ray Tracing.
+Ensure IAM role has xray:PutTraceSegments.
+
+#19. Enabling CORS and customizing preflight
+
+Steps:
+
+Resource → Actions → Enable CORS.
+Configure Allowed Origins, Methods, Headers, and Max Age.
+Review pre-generated OPTIONS method.
+Redeploy to stage.
+
+#20. Enabling/disabling caching
+
+Steps:
+
+Stage → Enable Cache toggle.
+Set TTL (seconds).
+Optionally override TTL at method level for finer control.
+
+
+##🔹 SECTION C: Troubleshooting & Logging (21–30)
+
+#21. Troubleshoot 403 Forbidden
+
+Check:
+
+API key missing or invalid.
+IAM auth unauthorized.
+Resource policy denying access.
+Invalid/missing authorizer token.
+
+#22. Common causes of 502 Bad Gateway and fixes
+
+Malformed integration response or missing headers.
+Backend errors (Lambda crash).
+Incorrect mapping template.
+
+Fixes:
+
+Inspect backend logs.
+Validate JSON.
+Add required headers like Content-Type.
+
+#23. Investigating high latency
+
+Check CloudWatch metrics:
+IntegrationLatency
+Latency
+Enable X-Ray for tracing.
+Optimize mapping templates and reduce backend response time.
+
+#24. CloudWatch logs and metrics
+
+Execution Logs: from CloudWatch Logs
+Access Logs: set via stage access log format.
+Metrics: Count, Latency, Errors, IntegrationLatency, CacheHitCount
+
+#25. Tracing requests using X-Ray
+
+Enable X-Ray on API Gateway stage and Lambda.
+View service maps and segment traces.
+Pinpoint bottlenecks in end-to-end trace.
+
+#26. Execution logs vs access logs
+
+Execution logs: available per method invocation, useful for debugging mapping templates.
+Access logs: summary of request details – method, path, status code, source IP.
+
+#27. Resolving 429 Too Many Requests
+
+Throttling exceeded.
+Usage plan quota reached.
+Resolution:
+Increase rate or burst.
+Enforce backoff/retry logic on clients.
+Let API keys differentiate client tiers.
+
+#28. Checking API key requirement
+
+If Method Request shows API Key Required, requests missing key return 403. Check in Usage Plans and Method Request.
+
+#29. Common CORS errors in browsers
+
+Missing Access-Control-Allow-Origin.
+Unconfigured OPTIONS method.
+Missing allowed headers, methods, or credentials settings.
+Add appropriate headers, enable credentials.
+with Route 53 failover.
+
+#30. Lambda not being invoked despite 200 response
+
+Likely mock integration is enabled. Confirm correct integration type, deployment, and mapping template.
+
+##🔹 SECTION D: Security & Access Control (31–40)
+
+#31. Authentication and authorization options in API Gateway
+
+IAM (SigV4)
+Cognito User Pools (JWT)
+Lambda Authorizer (custom auth)
+API Keys (basic control)
+Resource Policies (IP/VPC/account allow/deny)
+
+#32. Implementing IAM-based control
+
+Set Method Request’s Authorization to AWS_IAM. Client must sign with SigV4. Attach policy with permissions to execute-api:Invoke for the API.
+
+#33. Lambda Authorizer configuration via console
+
+Create Lambda for auth logic, then:
+Under API → Authorizers → Create Lambda Authorizer.
+Configure token or request type, TTL.
+Attach to method(s) in Method Request → Authorization.
+
+#34. Amazon Cognito and API Gateway
+
+Create User Pool and App Client.
+In API Gateway → Authorizers → Choose Cognito → specify pool, provider ARN.
+Attach to methods. API Gateway validates JWT automatically.
+
+#35. Resource policies & IP whitelisting
+
+In API → Resource Policy, add JSON to allow only specific IP ranges. Console step: Resource Policy section → paste policy.
+
+#36. Mutual TLS authentication
+
+Console Steps:
+Custom Domain Names → select domain → enable mTLS → upload CA truststore (PEM).
+Attach domain to API.
+Clients must present client certificates.
+
+#37. Best practices for securing public APIs
+
+Use JWT or IAM auth.
+Enable throttling & WAF.
+Audit using CloudTrail.
+Sanitize inputs via request models.
+Hide backend implementation details.
+
+#38. Security headers in responses
+
+Add via Integration Response mapping:
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+#39. Restricting API to VPC or private network
+
+Use Private APIs:
+Create endpoint type Private.
+Configure VPC endpoint.
+Use VPC-only resource policy.
+Access via ENI inside your VPC.
+
+#40. Preventing abuse/brute-force attacks
+
+Configure WAF with rate-based rules.
+Use throttling and quotas.
+Require API keys and authentication.
+Enable CloudFront with WAF.
+
+##🔹 SECTION E: Cost & Performance Optimization (41–50)
+
+#41. API Gateway pricing structure
+
+Charges include:
+
+$3.50/million requests (REST), $1.00/million (HTTP).
+Caching charges (per GB-hour).
+Custom domain per hour.
+Data transfer out.
+
+#42. Cost-reduction strategies
+
+Prefer HTTP APIs for simple use cases.
+Enable caching to reduce backend calls.
+Use regional endpoints for constant traffic.
+Optimize payload size.
+Use quotas and usage plans.
+
+#43. When to choose HTTP APIs over REST APIs
+
+Choose HTTP APIs if you need:
+Lower latency
+Lower costs
+Basic features (JWT, proxy)
+Avoid REST APIs when you don't need VPC link, WAF, or request validation.
+
+#44. Effect of response caching on cost
+
+Caches at English-level reduce Lambda invocations and data transfer.
+Store frequently requested data via TTL.
+Costs related to cache memory, but offset by compute savings.
+
+#45. Latency differences: regional vs edge-optimized vs private
+
+Edge-optimized: lowest latency for global clients (uses CloudFront).
+Regional: low latency in same region.
+Private: high security within VPC; accessible only from within.
+
+#46. Usage plans help avoid surprise billing
+
+Set quotas (requests/day/week/month).
+Monitor overages.
+Apply throttle so clients don’t exceed.
+
+#47. Response compression improves performance
+
+Enable gzip compression to reduce payload sizes. Set thresholds in Stage Settings (e.g., compress over 1 KB).
+
+#48. Payload size impact on cost/performance
+
+Large payloads increase request latency, data transfer cost, and may push into throttling. Use S3 presigned URLs.
+
+#49. Recommended ways to avoid API Gateway/Lambda timeouts
+
+Keep Lambda under 29s for sync workloads.
+Use asynchronous flows (SNS, SQS, Step Functions) for long-running jobs.
+Implement retries and exponential backoff.
+
+#50. Configuring API Gateway for high availability
+
+Use multiple stages/versions for safe rollouts.
+Use edge-optimized endpoint + CloudFront.
+Configure X-Ray, CloudWatch alarms, and dashboards.
+Deploy in multiple regions
