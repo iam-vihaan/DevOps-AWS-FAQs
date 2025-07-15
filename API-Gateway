@@ -1,4 +1,4 @@
-```
+```ruby
 SECTION A: Core Concepts & Architecture (1–10)
 ```
 #1. What is AWS API Gateway and how does it work with backend services like Lambda or HTTP endpoints?
