@@ -1,6 +1,7 @@
 ##SECTION A: Core Concepts & Architecture (1–10)
 
-#1. What is AWS API Gateway and how does it work with backend services like Lambda or HTTP endpoints?
+```
+1. What is AWS API Gateway and how does it work with backend services like Lambda or HTTP endpoints?
 
 Answer:
 
@@ -11,7 +12,7 @@ Transforms the request via mapping templates if needed.
 Invokes the backend (Lambda, HTTP endpoint, AWS service, or mock integration).
 Processes the backend response using mapping templates.
 Returns the response to the client.
-
+```
 #2. Differences between REST API, HTTP API, and WebSocket API in API Gateway
 
 Answer:
